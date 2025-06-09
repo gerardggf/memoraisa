@@ -3,15 +3,15 @@ import 'dart:io' show File;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:memoraisa/app/core/constants/global.dart';
 import 'package:memoraisa/app/core/question_type_enum.dart';
 import 'package:memoraisa/app/presentation/modules/home/home_controller.dart';
+import 'package:memoraisa/app/presentation/modules/home/home_view.dart';
 import 'package:memoraisa/app/presentation/shared/dialogs.dart' show Dialogs;
 
 class FileAndQuestionTypeSelector extends ConsumerStatefulWidget {
-  final Function(File file, QuestionTypeEnum questionType) onConfirm;
-
-  const FileAndQuestionTypeSelector({super.key, required this.onConfirm});
+  const FileAndQuestionTypeSelector({super.key});
 
   @override
   ConsumerState<FileAndQuestionTypeSelector> createState() =>
@@ -72,6 +72,7 @@ class _FileAndQuestionTypeSelectorState
               children: QuestionTypeEnum.values.map((type) {
                 return ChoiceChip(
                   label: Text(type.text),
+                  checkmarkColor: Colors.white,
                   selected: state.questionType == type,
                   onSelected: (_) {
                     notifier.updateQuestionType(type);
@@ -109,5 +110,8 @@ class _FileAndQuestionTypeSelectorState
       return;
     }
     await ref.read(homeControllerProvider.notifier).submit();
+    if (!mounted) return;
+    ref.invalidate(allQuizzesProvider);
+    context.pop();
   }
 }

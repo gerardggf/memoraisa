@@ -1,4 +1,4 @@
-import 'dart:convert' show utf8;
+import 'dart:convert' show utf8, json;
 import 'dart:io' show File;
 
 import 'package:archive/archive_io.dart' show ZipDecoder;
@@ -7,24 +7,27 @@ import 'package:memoraisa/app/core/constants/urls.dart';
 import 'package:memoraisa/app/core/question_type_enum.dart';
 import 'package:memoraisa/app/core/utils/failure/failure.dart';
 import 'package:memoraisa/app/core/utils/typedefs.dart';
-import 'package:memoraisa/app/domain/models/message_model.dart';
+import 'package:memoraisa/app/data/services/local_storage_service.dart';
+import 'package:memoraisa/app/domain/models/quizz_model.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:pdf_text/pdf_text.dart' show PDFDoc;
+import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'package:xml/xml.dart' show XmlDocument, XmlFindExtension;
 
 import '../../core/providers.dart';
 import '../../core/utils/either/either.dart';
 
 final apiServiceProvider = Provider<ApiService>(
-  (ref) => ApiService(ref.read(dioProvider)),
+  (ref) =>
+      ApiService(ref.read(dioProvider), ref.read(localStorageServiceProvider)),
 );
 
 class ApiService {
-  ApiService(this.dio);
+  ApiService(this.dio, this.localStorageService);
 
   final Dio dio;
+  final LocalStorageService localStorageService;
 
   final String url = Urls.promptEndpoint;
   final String apiKey = dotenv.env['API_KEY'] ?? '';
@@ -39,8 +42,11 @@ class ApiService {
     }
 
     if (path.endsWith('.pdf')) {
-      final doc = await PDFDoc.fromFile(file);
-      return await doc.text;
+      final bytes = await file.readAsBytes();
+      final document = PdfDocument(inputBytes: bytes);
+      String content = PdfTextExtractor(document).extractText();
+      document.dispose();
+      return content;
     }
 
     if (path.endsWith('.docx')) {
@@ -54,18 +60,42 @@ class ApiService {
     throw Exception('Formato de archivo no soportado');
   }
 
-  AsyncResult<MessageModel> sendPrompt({
+  AsyncResult<QuizzModel> sendPrompt({
     required File? file,
     required QuestionTypeEnum questionType,
   }) async {
     if (file == null) {
       return Either.left(Failure('No file selected'));
-    }
+    } //TODO: por ahora solo se hacen multiple questions
     final fileContent = await extractText(file);
+    final systemPrompt =
+        '''Responde siempre en español y únicamente con un JSON con el siguiente formato para cada pregunta, basado en la información que te será proporcionada: 
+    {
+    "quizzName": "(nombre del archivo)",
+    "questions": [
+        {
+            "term": "(pregunta 1)",
+            "answers": [
+                "(respuesta 1)",
+                "(respuesta 2)",
+                "(respuesta 3)"
+            ],
+            "correctAnswer": "(respuesta correcta identica a la listada en answers)"
+        },
+        {
+            "term": "(pregunta 2)",
+            "answers": [
+                "(respuesta 1)",
+                "(respuesta 2)",
+                "(respuesta 3)"
+            ],
+            "correctAnswer": "(respuesta correcta identica a la listada en answers)"
+        }
+    ]
+}''';
+    final userPrompt =
+        'Dame 10 preguntas sacadas del siguiente contenido: "$fileContent"';
     try {
-      if (kDebugMode) {
-        print(questionType);
-      }
       final response = await dio.post(
         url,
         options: Options(
@@ -77,19 +107,22 @@ class ApiService {
         data: {
           'model': 'llama-3.3-70b-versatile',
           "messages": [
-            {"role": "system", "content": questionType},
-            {"role": "user", "content": fileContent},
+            {"role": "system", "content": systemPrompt},
+            {"role": "user", "content": userPrompt},
           ],
         },
       );
-
+      if (kDebugMode) {
+        print(response.data);
+      }
       if (response.statusCode == 200) {
-        return Either.right(
-          MessageModel(
-            text: response.data['choices'][0]['message']['content'],
-            isMe: false,
-          ),
-        );
+        final content = response.data['choices'][0]['message']['content']
+            .toString();
+        final jsonString = _extractJsonBlock(content);
+        final quizz = json.decode(jsonString) as Map<String, dynamic>;
+        final result = QuizzModel.fromJson(quizz);
+        await localStorageService.saveQuiz(result);
+        return Either.right(result);
       } else {
         return Either.left(Failure('Status code: ${response.statusCode}'));
       }
@@ -99,5 +132,14 @@ class ApiService {
       }
       return Either.left(Failure(e.toString()));
     }
+  }
+
+  String _extractJsonBlock(String text) {
+    final regex = RegExp(r'{.*}', dotAll: true);
+    final match = regex.firstMatch(text);
+    if (match != null) {
+      return match.group(0)!;
+    }
+    throw Exception('No se pudo extraer el bloque JSON válido');
   }
 }

@@ -102,11 +102,16 @@ class AppTheme {
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        iconColor: AppColors.light,
+        iconColor: Colors.white,
         backgroundColor: AppColors.light,
         foregroundColor: AppColors.lightBg,
         textStyle: const TextStyle(fontWeight: FontWeight.bold),
       ),
+    ),
+    chipTheme: const ChipThemeData(
+      color: WidgetStatePropertyAll(AppColors.light),
+      labelStyle: TextStyle(color: Colors.white),
+      iconTheme: IconThemeData(color: Colors.white),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
@@ -316,6 +321,11 @@ class AppTheme {
       color: AppColors.darkBg,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
     ),
+    chipTheme: const ChipThemeData(
+      color: WidgetStatePropertyAll(AppColors.dark),
+      labelStyle: TextStyle(color: Colors.white),
+      iconTheme: IconThemeData(color: Colors.white),
+    ),
     dialogTheme: const DialogThemeData(
       iconColor: AppColors.darkSec,
       contentTextStyle: TextStyle(color: AppColors.darkSec),
@@ -382,7 +392,7 @@ class AppTheme {
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        iconColor: AppColors.dark,
+        iconColor: Colors.white,
         backgroundColor: AppColors.darkSec,
         foregroundColor: AppColors.dark,
         textStyle: const TextStyle(fontWeight: FontWeight.bold),

@@ -4,10 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/assets.dart';
 
 class SplashView extends StatelessWidget {
-  const SplashView({
-    super.key,
-    this.error,
-  });
+  const SplashView({super.key, this.error});
 
   final String? error;
 
@@ -28,16 +25,13 @@ class SplashView extends StatelessWidget {
                 children: [
                   Image.asset(
                     Assets.iconLogo,
-                    errorBuilder: (_, __, ___) => const SizedBox(),
+                    errorBuilder: (_, _, _) => const SizedBox(),
                   ),
                   30.h,
                   if (error != null)
                     Text(
                       error!,
-                      style: const TextStyle(
-                        color: Colors.red,
-                        fontSize: 16,
-                      ),
+                      style: const TextStyle(color: Colors.red, fontSize: 16),
                     ),
                 ],
               ),

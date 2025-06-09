@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:memoraisa/app/core/question_type_enum.dart';
 import 'package:memoraisa/app/core/utils/typedefs.dart';
 import 'package:memoraisa/app/data/services/api_service.dart';
-import 'package:memoraisa/app/domain/models/message_model.dart';
+import 'package:memoraisa/app/domain/models/quizz_model.dart';
 import 'package:memoraisa/app/domain/repositories/prefs_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'state/home_state.dart';
@@ -34,7 +34,7 @@ class HomeController extends StateNotifier<HomeState> {
     state = state.copyWith(questionType: value);
   }
 
-  AsyncResult<MessageModel> submit() async {
+  AsyncResult<QuizzModel> submit() async {
     updateFetching(true);
     final result = apiService.sendPrompt(
       file: state.file,

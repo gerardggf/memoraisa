@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:memoraisa/app/domain/models/quizz_model.dart';
 import 'package:memoraisa/app/presentation/modules/new_quizz/new_quizz_view.dart';
+import 'package:memoraisa/app/presentation/modules/quizz/quizz_view.dart';
 
 import '../../core/constants/assets.dart';
 import '../../core/generated/translations.g.dart';
@@ -24,7 +26,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           Assets.iconLogo,
           width: 50,
           height: 50,
-          errorBuilder: (_, __, ___) => const SizedBox(),
+          errorBuilder: (_, _, _) => const SizedBox(),
         ),
       ),
     ),
@@ -45,6 +47,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         name: NewQuizzView.routeName,
         path: '/new-quizz',
         builder: (context, state) => const NewQuizzView(),
+      ),
+      GoRoute(
+        name: QuizzView.routeName,
+        path: '/quizz',
+        builder: (context, state) => QuizzView(state.extra as QuizzModel),
       ),
     ],
     redirect: (context, state) {

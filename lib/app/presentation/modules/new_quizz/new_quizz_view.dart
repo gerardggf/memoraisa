@@ -10,7 +10,7 @@ class NewQuizzView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('New quizz')),
-      body: FileAndQuestionTypeSelector(onConfirm: (file, questionType) {}),
+      body: FileAndQuestionTypeSelector(),
     );
   }
 }

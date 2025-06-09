@@ -3,10 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:memoraisa/app/core/constants/global.dart';
 import 'package:memoraisa/app/core/utils/extensions/theme_mode_extension.dart';
+import 'package:memoraisa/app/data/services/local_storage_service.dart';
+import 'package:memoraisa/app/domain/models/quizz_model.dart' show QuizzModel;
 import 'package:memoraisa/app/presentation/modules/new_quizz/new_quizz_view.dart'
     show NewQuizzView;
+import 'package:memoraisa/app/presentation/modules/quizz/quizz_view.dart';
 import 'package:memoraisa/app/presentation/shared/controllers/theme_controller.dart'
     show themeControllerProvider;
+
+final allQuizzesProvider = FutureProvider<List<QuizzModel>>((ref) async {
+  final service = ref.read(localStorageServiceProvider);
+  return service.getQuizzes();
+});
 
 class HomeView extends ConsumerWidget {
   const HomeView({super.key});
@@ -29,11 +37,47 @@ class HomeView extends ConsumerWidget {
           ),
         ],
       ),
-      body: ElevatedButton(
+      floatingActionButton: ElevatedButton(
         onPressed: () {
           context.pushNamed(NewQuizzView.routeName);
         },
         child: const Text('New quizz'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: ref
+            .watch(allQuizzesProvider)
+            .when(
+              data: (quizzes) {
+                if (quizzes.isEmpty) {
+                  return const Center(child: Text('No quizzes yet.'));
+                }
+
+                return ListView.builder(
+                  itemCount: quizzes.length,
+                  itemBuilder: (context, index) {
+                    final quizz = quizzes[index];
+                    return ListTile(
+                      trailing: IconButton(
+                        onPressed: () {
+                          ref
+                              .read(localStorageServiceProvider)
+                              .deleteQuiz(quizz.quizzName);
+                        },
+                        icon: Icon(Icons.delete, color: Colors.red),
+                      ),
+                      title: Text(quizz.quizzName),
+                      subtitle: Text('${quizz.questions.length} preguntas'),
+                      onTap: () {
+                        context.pushNamed(QuizzView.routeName, extra: quizz);
+                      },
+                    );
+                  },
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, st) => Center(child: Text('Error: $e')),
+            ),
       ),
     );
   }

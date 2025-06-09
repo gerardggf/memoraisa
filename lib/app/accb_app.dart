@@ -19,9 +19,7 @@ class AppStartupWidget extends ConsumerWidget {
     final appStartupState = ref.watch(appStartupProvider);
     return appStartupState.when(
       data: (_) => const MemoraisaApp(),
-      error: (e, __) => ErrorInfoWidget(
-        text: e.toString(),
-      ),
+      error: (e, _) => ErrorInfoWidget(text: e.toString()),
       loading: () => const LoadingWidget(),
     );
   }
@@ -32,9 +30,7 @@ class AppStartupErrorWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: ErrorInfoWidget(),
-    );
+    return const MaterialApp(home: ErrorInfoWidget());
   }
 }
 
@@ -43,11 +39,7 @@ class AppStartupLoadingWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Center(
-        child: LoadingWidget(),
-      ),
-    );
+    return const MaterialApp(home: Center(child: LoadingWidget()));
   }
 }
 

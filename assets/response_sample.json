@@ -1,0 +1,23 @@
+{
+    "quizzName": "(nombre del archivo)",
+    "questions": [
+        {
+            "term": "(pregunta 1)",
+            "answers": [
+                "(respuesta 1)",
+                "(respuesta 2)",
+                "(respuesta 3)"
+            ],
+            "correctAnswer": "(respuesta correcta identica a la listada en answers)"
+        },
+        {
+            "term": "(pregunta 2)",
+            "answers": [
+                "(respuesta 1)",
+                "(respuesta 2)",
+                "(respuesta 3)"
+            ],
+            "correctAnswer": "(respuesta correcta identica a la listada en answers)"
+        }
+    ]
+}
