@@ -6,6 +6,7 @@ part 'quizz_state.freezed.dart';
 class QuizzState with _$QuizzState {
   factory QuizzState({
     @Default(false) bool fetching,
+    @Default(false) bool showAnswers,
     @Default({}) Map<int, String?> selectedAnswers,
   }) = _QuizzState;
 }

@@ -13,6 +13,10 @@ class QuizzController extends StateNotifier<QuizzState> {
     state = state.copyWith(fetching: value);
   }
 
+  void updateShowAnswers(bool value) {
+    state = state.copyWith(showAnswers: value);
+  }
+
   void updateSelectedAnswers(Map<int, String?> value) {
     state = state.copyWith(selectedAnswers: value);
   }

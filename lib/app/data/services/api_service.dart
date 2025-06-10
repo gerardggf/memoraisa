@@ -97,7 +97,7 @@ class ApiService {
     ]
 }''';
     final userPrompt =
-        'Dame 10 preguntas sacadas del siguiente contenido: "$fileContent"';
+        'Dame 10 preguntas sacadas del siguiente contenido: "$fileContent". Haz que las respuestas no estén ordenadas.';
     try {
       final response = await dio.post(
         url,
@@ -108,7 +108,7 @@ class ApiService {
           },
         ),
         data: {
-          'model': 'whisper-large-v3-turbo', //'llama-3.3-70b-versatile',
+          'model': 'llama-3.3-70b-versatile',
           "messages": [
             {"role": "system", "content": systemPrompt},
             {"role": "user", "content": userPrompt},
