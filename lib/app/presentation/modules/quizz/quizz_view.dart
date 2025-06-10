@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:memoraisa/app/domain/models/quizz_model.dart';
-import 'package:memoraisa/app/presentation/modules/quizz/widgets/quizz_widget.dart';
+import 'package:memoraisa/app/presentation/modules/quizz/quizz_controller.dart';
+import 'package:memoraisa/app/presentation/modules/quizz/widgets/question_widget.dart';
 
 class QuizzView extends ConsumerStatefulWidget {
   const QuizzView(this.quizz, {super.key});
@@ -17,6 +18,8 @@ class QuizzView extends ConsumerStatefulWidget {
 class _QuizzViewState extends ConsumerState<QuizzView> {
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(quizzControllerProvider);
+    final notifier = ref.read(quizzControllerProvider.notifier);
     return Scaffold(
       appBar: AppBar(title: Text(widget.quizz.quizzName)),
       body: ListView.builder(
@@ -24,10 +27,21 @@ class _QuizzViewState extends ConsumerState<QuizzView> {
         itemCount: widget.quizz.questions.length,
         itemBuilder: (context, index) {
           final question = widget.quizz.questions[index];
-          return QuizzWidget(
+          return QuestionWidget(
+            index: index + 1,
             question: question,
-            onSelectAnswer: (answer) {},
-            selectedAnswer: '',
+            onSelectAnswer: (answer) {
+              if (answer == state.selectedAnswers[index]) {
+                notifier.updateSelectedAnswers(
+                  Map.from(state.selectedAnswers)..[index] = null,
+                );
+                return;
+              }
+              notifier.updateSelectedAnswers(
+                Map.from(state.selectedAnswers)..[index] = answer,
+              );
+            },
+            selectedAnswer: state.selectedAnswers[index],
           );
         },
       ),

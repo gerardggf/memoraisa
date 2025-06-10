@@ -10,7 +10,7 @@ import 'package:memoraisa/app/core/utils/typedefs.dart';
 import 'package:memoraisa/app/data/services/local_storage_service.dart';
 import 'package:memoraisa/app/domain/models/quizz_model.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/foundation.dart' show kDebugMode, compute;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'package:xml/xml.dart' show XmlDocument, XmlFindExtension;
@@ -32,25 +32,26 @@ class ApiService {
   final String url = Urls.promptEndpoint;
   final String apiKey = dotenv.env['API_KEY'] ?? '';
 
-  Future<String> extractText(File file) async {
-    final path = file.path.toLowerCase();
+  String extractText(String path) {
+    final file = File(path);
+    final lowerPath = path.toLowerCase();
 
-    if (path.endsWith('.txt') ||
-        path.endsWith('.json') ||
-        path.endsWith('.csv')) {
-      return await file.readAsString();
+    if (lowerPath.endsWith('.txt') ||
+        lowerPath.endsWith('.json') ||
+        lowerPath.endsWith('.csv')) {
+      return file.readAsStringSync();
     }
 
-    if (path.endsWith('.pdf')) {
-      final bytes = await file.readAsBytes();
+    if (lowerPath.endsWith('.pdf')) {
+      final bytes = file.readAsBytesSync();
       final document = PdfDocument(inputBytes: bytes);
       String content = PdfTextExtractor(document).extractText();
       document.dispose();
       return content;
     }
 
-    if (path.endsWith('.docx')) {
-      final bytes = await file.readAsBytes();
+    if (lowerPath.endsWith('.docx')) {
+      final bytes = file.readAsBytesSync();
       final archive = ZipDecoder().decodeBytes(bytes);
       final xmlFile = archive.firstWhere((f) => f.name == 'word/document.xml');
       final xml = XmlDocument.parse(utf8.decode(xmlFile.content));
@@ -67,7 +68,9 @@ class ApiService {
     if (file == null) {
       return Either.left(Failure('No file selected'));
     } //TODO: por ahora solo se hacen multiple questions
-    final fileContent = await extractText(file);
+
+    final fileContent = await compute(extractText, file.path);
+
     final systemPrompt =
         '''Responde siempre en español y únicamente con un JSON con el siguiente formato para cada pregunta, basado en la información que te será proporcionada: 
     {
@@ -105,7 +108,7 @@ class ApiService {
           },
         ),
         data: {
-          'model': 'llama-3.3-70b-versatile',
+          'model': 'whisper-large-v3-turbo', //'llama-3.3-70b-versatile',
           "messages": [
             {"role": "system", "content": systemPrompt},
             {"role": "user", "content": userPrompt},

@@ -5,11 +5,11 @@ import 'package:memoraisa/app/core/constants/global.dart';
 import 'package:memoraisa/app/core/utils/extensions/theme_mode_extension.dart';
 import 'package:memoraisa/app/data/services/local_storage_service.dart';
 import 'package:memoraisa/app/domain/models/quizz_model.dart' show QuizzModel;
-import 'package:memoraisa/app/presentation/modules/new_quizz/new_quizz_view.dart'
-    show NewQuizzView;
+import 'package:memoraisa/app/presentation/modules/new_quizz/new_quizz_view.dart';
 import 'package:memoraisa/app/presentation/modules/quizz/quizz_view.dart';
 import 'package:memoraisa/app/presentation/shared/controllers/theme_controller.dart'
     show themeControllerProvider;
+import 'package:memoraisa/app/presentation/shared/dialogs.dart';
 
 final allQuizzesProvider = FutureProvider<List<QuizzModel>>((ref) async {
   final service = ref.read(localStorageServiceProvider);
@@ -50,7 +50,26 @@ class HomeView extends ConsumerWidget {
             .when(
               data: (quizzes) {
                 if (quizzes.isEmpty) {
-                  return const Center(child: Text('No quizzes yet.'));
+                  return Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          onPressed: () {
+                            context.pushNamed(NewQuizzView.routeName);
+                          },
+                          icon: Icon(Icons.add, size: 50),
+                        ),
+                        Text(
+                          'No quizzes yet.',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
                 }
 
                 return ListView.builder(
@@ -59,10 +78,17 @@ class HomeView extends ConsumerWidget {
                     final quizz = quizzes[index];
                     return ListTile(
                       trailing: IconButton(
-                        onPressed: () {
-                          ref
+                        onPressed: () async {
+                          final doIt = await Dialogs.trueFalse(
+                            context: context,
+                            title: 'Delete quizz',
+                            content: 'Do you want to delete this quizz?',
+                          );
+                          if (!doIt) return;
+                          await ref
                               .read(localStorageServiceProvider)
                               .deleteQuiz(quizz.quizzName);
+                          ref.invalidate(allQuizzesProvider);
                         },
                         icon: Icon(Icons.delete, color: Colors.red),
                       ),
