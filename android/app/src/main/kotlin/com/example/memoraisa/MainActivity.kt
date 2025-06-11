@@ -1,4 +1,4 @@
-package com.example.memoraisa
+package com.gerardggf.memoraisa
 
 import io.flutter.embedding.android.FlutterActivity
 
