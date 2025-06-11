@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:memoraisa/app/core/utils/extensions/num_to_sizedbox.dart';
+import 'package:memoraisa/app/core/utils/extensions/theme_mode_extension.dart';
 import 'package:memoraisa/app/domain/models/quizz_model.dart';
 import 'package:memoraisa/app/presentation/modules/quizz/quizz_controller.dart';
-import 'package:memoraisa/app/presentation/shared/controllers/theme_controller.dart';
 
 import '../../../../core/constants/colors.dart';
 
@@ -28,7 +28,7 @@ class QuestionWidget extends ConsumerStatefulWidget {
 class _QuestionWidgetState extends ConsumerState<QuestionWidget> {
   @override
   Widget build(BuildContext context) {
-    final darkMode = ref.watch(themeControllerProvider).darkMode;
+    final darkMode = context.isDarkMode;
     final state = ref.watch(quizzControllerProvider);
     return AbsorbPointer(
       absorbing: state.showAnswers,

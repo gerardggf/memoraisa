@@ -13,6 +13,7 @@ void main() async {
   await dotenv.load(fileName: ".env");
   await LocaleSettings.useDeviceLocale();
 
+  ///hive
   await Hive.initFlutter();
   Hive.registerAdapter(QuizzModelAdapter());
   Hive.registerAdapter(QuestionModelAdapter());

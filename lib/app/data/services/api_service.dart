@@ -1,6 +1,6 @@
+// ADAPTADO PARA WEB Y MÓVIL
 import 'dart:convert' show utf8, json;
-import 'dart:io' show File;
-
+import 'dart:typed_data';
 import 'package:archive/archive_io.dart' show ZipDecoder;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:memoraisa/app/core/constants/urls.dart';
@@ -14,7 +14,6 @@ import 'package:flutter/foundation.dart' show kDebugMode, compute;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'package:xml/xml.dart' show XmlDocument, XmlFindExtension;
-
 import '../../core/providers.dart';
 import '../../core/utils/either/either.dart';
 
@@ -32,27 +31,23 @@ class ApiService {
   final String url = Urls.promptEndpoint;
   final String apiKey = dotenv.env['API_KEY'] ?? '';
 
-  /// Lee el contenido de texto del archivo de forma aislada para evitar bloquear el hilo principal
-  static String extractText(String path) {
-    final file = File(path);
-    final lowerPath = path.toLowerCase();
+  static String extractTextFromBytes(Uint8List bytes, String filename) {
+    final lowerPath = filename.toLowerCase();
 
     if (lowerPath.endsWith('.txt') ||
         lowerPath.endsWith('.json') ||
         lowerPath.endsWith('.csv')) {
-      return file.readAsStringSync();
+      return utf8.decode(bytes);
     }
 
     if (lowerPath.endsWith('.pdf')) {
-      final bytes = file.readAsBytesSync();
       final document = PdfDocument(inputBytes: bytes);
-      final content = PdfTextExtractor(document).extractText();
+      String content = PdfTextExtractor(document).extractText();
       document.dispose();
       return content;
     }
 
     if (lowerPath.endsWith('.docx')) {
-      final bytes = file.readAsBytesSync();
       final archive = ZipDecoder().decodeBytes(bytes);
       final xmlFile = archive.firstWhere((f) => f.name == 'word/document.xml');
       final xml = XmlDocument.parse(utf8.decode(xmlFile.content));
@@ -63,16 +58,36 @@ class ApiService {
   }
 
   AsyncResult<QuizzModel> sendPrompt({
-    required File? file,
+    required Uint8List? fileBytes,
+    required String? fileName,
     required QuestionTypeEnum questionType,
   }) async {
-    if (file == null) return Either.left(Failure('No file selected'));
+    if (fileBytes == null || fileName == null) {
+      return Either.left(Failure('No file selected'));
+    }
+
+    final fileContent = await compute(_computeExtractText, [
+      fileBytes,
+      fileName,
+    ]);
+
+    final systemPrompt =
+        '''Responde siempre en español y únicamente con un JSON con el siguiente formato para cada pregunta, basado en la información que te será proporcionada:
+{
+  "quizzName": "(nombre del archivo)",
+  "questions": [
+    {
+      "term": "(pregunta 1)",
+      "answers": ["(respuesta 1)", "(respuesta 2)", "(respuesta 3)"],
+      "correctAnswer": "(respuesta correcta identica a la listada en answers)"
+    }
+  ]
+}''';
+
+    final userPrompt =
+        'Dame 10 preguntas sacadas del siguiente contenido: "$fileContent". Haz que las respuestas no estén ordenadas.';
 
     try {
-      final fileContent = await compute(extractText, file.path);
-      final systemPrompt = _buildSystemPrompt();
-      final userPrompt = _buildUserPrompt(fileContent);
-
       final response = await dio.post(
         url,
         options: Options(
@@ -83,14 +98,14 @@ class ApiService {
         ),
         data: {
           'model': 'llama-3.3-70b-versatile',
-          'messages': [
-            {'role': 'system', 'content': systemPrompt},
-            {'role': 'user', 'content': userPrompt},
+          "messages": [
+            {"role": "system", "content": systemPrompt},
+            {"role": "user", "content": userPrompt},
           ],
         },
       );
 
-      if (kDebugMode) print('API response: ${response.data}');
+      if (kDebugMode) print(response.data);
 
       if (response.statusCode == 200) {
         final content = response.data['choices'][0]['message']['content']
@@ -101,41 +116,18 @@ class ApiService {
         await localStorageService.saveQuiz(result);
         return Either.right(result);
       } else {
-        return Either.left(Failure('Status code: ${response.statusCode}'));
+        return Either.left(Failure('Status code: \${response.statusCode}'));
       }
     } catch (e) {
-      if (kDebugMode) print('API error: $e');
+      if (kDebugMode) print(e);
       return Either.left(Failure(e.toString()));
     }
   }
 
-  String _buildSystemPrompt() {
-    return '''
-Responde siempre en español y únicamente con un JSON con el siguiente formato para cada pregunta, basado en la información que te será proporcionada:
-{
-  "quizzName": "(nombre del archivo)",
-  "questions": [
-    {
-      "term": "(pregunta 1)",
-      "answers": [
-        "(respuesta 1)",
-        "(respuesta 2)",
-        "(respuesta 3)"
-      ],
-      "correctAnswer": "(respuesta correcta identica a la listada en answers)"
-    },
-    ...
-  ]
-}
-''';
-  }
-
-  String _buildUserPrompt(String content) {
-    final maxTokens = 40000;
-    final shortened = content.length > maxTokens
-        ? content.substring(0, maxTokens)
-        : content;
-    return 'Dame 10 preguntas sacadas del siguiente contenido: "$shortened". Haz que las respuestas no estén ordenadas.';
+  static String _computeExtractText(List<dynamic> args) {
+    final bytes = args[0] as Uint8List;
+    final filename = args[1] as String;
+    return extractTextFromBytes(bytes, filename);
   }
 
   String _extractJsonBlock(String text) {

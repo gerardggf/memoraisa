@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:memoraisa/app/core/utils/extensions/theme_mode_extension.dart';
 
 import '../main.dart';
 import 'core/constants/global.dart';
@@ -8,7 +9,6 @@ import 'core/generated/translations.g.dart';
 import 'presentation/shared/widgets/error_info_widget.dart';
 import 'presentation/shared/widgets/loading_widget.dart';
 import 'presentation/routes/router.dart';
-import 'presentation/shared/controllers/theme_controller.dart';
 import 'presentation/shared/theme.dart';
 
 class AppStartupWidget extends ConsumerWidget {
@@ -59,7 +59,7 @@ class _TeamTrackAppState extends ConsumerState<MemoraisaApp> {
       supportedLocales: AppLocaleUtils.supportedLocales,
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.getTheme(ref.watch(themeControllerProvider).darkMode),
+      theme: AppTheme.getTheme(context.isDarkMode),
       routerConfig: ref.watch(goRouterProvider),
     );
   }

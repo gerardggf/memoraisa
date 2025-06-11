@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:memoraisa/app/core/question_type_enum.dart';
 import 'package:memoraisa/app/core/utils/typedefs.dart';
@@ -30,8 +30,8 @@ class HomeController extends StateNotifier<HomeState> {
     state = state.copyWith(fileFetching: value);
   }
 
-  void updateFile(File value) {
-    state = state.copyWith(file: value);
+  void updateFile(Uint8List fileBytes, String fileName) {
+    state = state.copyWith(file: fileBytes, fileName: fileName);
   }
 
   void updateQuestionType(QuestionTypeEnum value) {
@@ -41,7 +41,8 @@ class HomeController extends StateNotifier<HomeState> {
   AsyncResult<QuizzModel> submit() async {
     updateFetching(true);
     final result = await apiService.sendPrompt(
-      file: state.file,
+      fileBytes: state.file,
+      fileName: state.fileName,
       questionType: state.questionType,
     );
     updateFetching(false);

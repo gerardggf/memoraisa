@@ -1,5 +1,3 @@
-import 'dart:io' show File;
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,9 +5,9 @@ import 'package:go_router/go_router.dart';
 import 'package:memoraisa/app/core/constants/colors.dart';
 import 'package:memoraisa/app/core/constants/global.dart';
 import 'package:memoraisa/app/core/question_type_enum.dart';
+import 'package:memoraisa/app/core/utils/extensions/theme_mode_extension.dart';
 import 'package:memoraisa/app/presentation/modules/home/home_controller.dart';
 import 'package:memoraisa/app/presentation/modules/home/home_view.dart';
-import 'package:memoraisa/app/presentation/shared/controllers/theme_controller.dart';
 import 'package:memoraisa/app/presentation/shared/dialogs.dart' show Dialogs;
 
 class FileAndQuestionTypeSelector extends ConsumerStatefulWidget {
@@ -31,9 +29,10 @@ class _FileAndQuestionTypeSelectorState
         allowedExtensions: Global.allowedFileExtensions,
       );
       if (result != null && result.files.single.path != null) {
-        ref
-            .read(homeControllerProvider.notifier)
-            .updateFile(File(result.files.single.path!));
+        notifier.updateFile(
+          result.files.single.bytes!,
+          result.files.single.name,
+        );
       }
       notifier.updateFileFetching(false);
     } catch (_) {
@@ -70,7 +69,7 @@ class _FileAndQuestionTypeSelectorState
                         width: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 3,
-                          color: ref.watch(themeControllerProvider).darkMode
+                          color: context.isDarkMode
                               ? Colors.black
                               : AppColors.light,
                         ),
@@ -83,7 +82,7 @@ class _FileAndQuestionTypeSelectorState
                   state.fileFetching
                       ? 'Loading...'
                       : state.file != null
-                      ? state.file!.path.split('/').last
+                      ? state.fileName!
                       : 'Seleccionar archivo',
                 ),
               ),
@@ -116,7 +115,7 @@ class _FileAndQuestionTypeSelectorState
                           width: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 3,
-                            color: ref.watch(themeControllerProvider).darkMode
+                            color: context.isDarkMode
                                 ? Colors.black
                                 : Colors.white,
                           ),
@@ -124,7 +123,7 @@ class _FileAndQuestionTypeSelectorState
                       : Icon(
                           Icons.auto_awesome,
                           size: 20,
-                          color: ref.watch(themeControllerProvider).darkMode
+                          color: context.isDarkMode
                               ? Colors.black
                               : Colors.white,
                         ),

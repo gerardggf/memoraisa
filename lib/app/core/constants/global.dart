@@ -13,4 +13,6 @@ class Global {
     'json',
     'csv',
   ];
+
+  static const int maxCharacters = 20000;
 }

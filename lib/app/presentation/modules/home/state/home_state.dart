@@ -1,5 +1,4 @@
-import 'dart:io';
-
+import 'package:flutter/services.dart';
 import 'package:memoraisa/app/core/generated/translations.g.dart';
 import 'package:memoraisa/app/core/question_type_enum.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -13,7 +12,8 @@ class HomeState with _$HomeState {
     @Default(false) bool fileFetching,
     @Default(QuestionTypeEnum.single) QuestionTypeEnum questionType,
     @Default(10) int numberOfQuestions,
-    @Default(null) File? file,
+    @Default(null) Uint8List? file,
+    @Default(null) String? fileName,
     @Default(AppLocale.en) AppLocale responseLocale,
   }) = _HomeState;
 }
