@@ -32,7 +32,8 @@ class ApiService {
   final String url = Urls.promptEndpoint;
   final String apiKey = dotenv.env['API_KEY'] ?? '';
 
-  String extractText(String path) {
+  /// Lee el contenido de texto del archivo de forma aislada para evitar bloquear el hilo principal
+  static String extractText(String path) {
     final file = File(path);
     final lowerPath = path.toLowerCase();
 
@@ -45,7 +46,7 @@ class ApiService {
     if (lowerPath.endsWith('.pdf')) {
       final bytes = file.readAsBytesSync();
       final document = PdfDocument(inputBytes: bytes);
-      String content = PdfTextExtractor(document).extractText();
+      final content = PdfTextExtractor(document).extractText();
       document.dispose();
       return content;
     }
@@ -65,40 +66,13 @@ class ApiService {
     required File? file,
     required QuestionTypeEnum questionType,
   }) async {
-    if (file == null) {
-      return Either.left(Failure('No file selected'));
-    } //TODO: por ahora solo se hacen multiple questions
+    if (file == null) return Either.left(Failure('No file selected'));
 
-    final fileContent = await compute(extractText, file.path);
-
-    final systemPrompt =
-        '''Responde siempre en español y únicamente con un JSON con el siguiente formato para cada pregunta, basado en la información que te será proporcionada: 
-    {
-    "quizzName": "(nombre del archivo)",
-    "questions": [
-        {
-            "term": "(pregunta 1)",
-            "answers": [
-                "(respuesta 1)",
-                "(respuesta 2)",
-                "(respuesta 3)"
-            ],
-            "correctAnswer": "(respuesta correcta identica a la listada en answers)"
-        },
-        {
-            "term": "(pregunta 2)",
-            "answers": [
-                "(respuesta 1)",
-                "(respuesta 2)",
-                "(respuesta 3)"
-            ],
-            "correctAnswer": "(respuesta correcta identica a la listada en answers)"
-        }
-    ]
-}''';
-    final userPrompt =
-        'Dame 10 preguntas sacadas del siguiente contenido: "$fileContent". Haz que las respuestas no estén ordenadas.';
     try {
+      final fileContent = await compute(extractText, file.path);
+      final systemPrompt = _buildSystemPrompt();
+      final userPrompt = _buildUserPrompt(fileContent);
+
       final response = await dio.post(
         url,
         options: Options(
@@ -109,15 +83,15 @@ class ApiService {
         ),
         data: {
           'model': 'llama-3.3-70b-versatile',
-          "messages": [
-            {"role": "system", "content": systemPrompt},
-            {"role": "user", "content": userPrompt},
+          'messages': [
+            {'role': 'system', 'content': systemPrompt},
+            {'role': 'user', 'content': userPrompt},
           ],
         },
       );
-      if (kDebugMode) {
-        print(response.data);
-      }
+
+      if (kDebugMode) print('API response: ${response.data}');
+
       if (response.statusCode == 200) {
         final content = response.data['choices'][0]['message']['content']
             .toString();
@@ -130,11 +104,38 @@ class ApiService {
         return Either.left(Failure('Status code: ${response.statusCode}'));
       }
     } catch (e) {
-      if (kDebugMode) {
-        print(e.toString());
-      }
+      if (kDebugMode) print('API error: $e');
       return Either.left(Failure(e.toString()));
     }
+  }
+
+  String _buildSystemPrompt() {
+    return '''
+Responde siempre en español y únicamente con un JSON con el siguiente formato para cada pregunta, basado en la información que te será proporcionada:
+{
+  "quizzName": "(nombre del archivo)",
+  "questions": [
+    {
+      "term": "(pregunta 1)",
+      "answers": [
+        "(respuesta 1)",
+        "(respuesta 2)",
+        "(respuesta 3)"
+      ],
+      "correctAnswer": "(respuesta correcta identica a la listada en answers)"
+    },
+    ...
+  ]
+}
+''';
+  }
+
+  String _buildUserPrompt(String content) {
+    final maxTokens = 40000;
+    final shortened = content.length > maxTokens
+        ? content.substring(0, maxTokens)
+        : content;
+    return 'Dame 10 preguntas sacadas del siguiente contenido: "$shortened". Haz que las respuestas no estén ordenadas.';
   }
 
   String _extractJsonBlock(String text) {

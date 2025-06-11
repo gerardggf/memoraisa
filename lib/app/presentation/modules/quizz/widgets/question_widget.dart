@@ -29,82 +29,97 @@ class _QuestionWidgetState extends ConsumerState<QuestionWidget> {
   @override
   Widget build(BuildContext context) {
     final darkMode = ref.watch(themeControllerProvider).darkMode;
-    return Container(
-      margin: EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: Colors.grey,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        children: [
-          Container(
-            padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-            decoration: BoxDecoration(
-              color: darkMode ? Colors.white : AppColors.light,
-              borderRadius: BorderRadius.circular(20),
-            ),
+    final state = ref.watch(quizzControllerProvider);
+    return AbsorbPointer(
+      absorbing: state.showAnswers,
+      child: Container(
+        margin: EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: widget.selectedAnswer != widget.question.correctAnswer
+              ? Colors.red
+              : Colors.grey,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+              decoration: BoxDecoration(
+                color: darkMode ? Colors.white : AppColors.light,
+                borderRadius: BorderRadius.circular(20),
+              ),
 
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${widget.index}. ${widget.question.term}',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                    color: darkMode ? Colors.black : Colors.white,
-                  ),
-                ),
-                10.h,
-                for (var answer in widget.question.answers)
-                  InkWell(
-                    onTap: () {
-                      widget.onSelectAnswer(answer);
-                    },
-                    borderRadius: BorderRadius.circular(20),
-                    child: Container(
-                      margin: EdgeInsets.symmetric(vertical: 5),
-                      padding: EdgeInsets.all(5),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: darkMode ? AppColors.darkBg : Colors.white,
-                        ),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        children: [
-                          Checkbox(
-                            value: answer == widget.selectedAnswer,
-                            onChanged: (_) {},
-                            activeColor: darkMode ? Colors.black : Colors.white,
-                            checkColor: darkMode
-                                ? Colors.white
-                                : AppColors.light,
-                          ),
-                          Expanded(
-                            child: Text(
-                              '${mapIndex(widget.question.answers.indexOf(answer))} $answer',
-                              style: TextStyle(
-                                color: darkMode ? Colors.black : Colors.white,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${widget.index}. ${widget.question.term}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: darkMode ? Colors.black : Colors.white,
                     ),
                   ),
-              ],
-            ),
-          ),
-          if (ref.watch(quizzControllerProvider).showAnswers)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              child: Text(
-                '${mapIndex(widget.question.answers.indexOf(widget.question.correctAnswer))} ${widget.question.correctAnswer}',
-                style: TextStyle(color: Colors.white),
+                  10.h,
+                  for (var answer in widget.question.answers)
+                    InkWell(
+                      onTap: () {
+                        widget.onSelectAnswer(answer);
+                      },
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        margin: EdgeInsets.symmetric(vertical: 5),
+                        padding: EdgeInsets.all(5),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: darkMode ? AppColors.darkBg : Colors.white,
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          children: [
+                            Checkbox(
+                              value: answer == widget.selectedAnswer,
+                              onChanged: state.showAnswers
+                                  ? null
+                                  : (_) {
+                                      widget.onSelectAnswer(answer);
+                                    },
+                              activeColor: darkMode
+                                  ? Colors.black
+                                  : Colors.white,
+                              checkColor: darkMode
+                                  ? Colors.white
+                                  : AppColors.light,
+                            ),
+                            Expanded(
+                              child: Text(
+                                '${mapIndex(widget.question.answers.indexOf(answer))} $answer',
+                                style: TextStyle(
+                                  color: darkMode ? Colors.black : Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
-        ],
+            if (state.showAnswers)
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
+                child: Text(
+                  '${mapIndex(widget.question.answers.indexOf(widget.question.correctAnswer))} ${widget.question.correctAnswer}',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

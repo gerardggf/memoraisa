@@ -44,7 +44,7 @@ class HomeView extends ConsumerWidget {
         child: const Text('New quizz'),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(10),
         child: ref
             .watch(allQuizzesProvider)
             .when(
@@ -77,6 +77,7 @@ class HomeView extends ConsumerWidget {
                   itemBuilder: (context, index) {
                     final quizz = quizzes[index];
                     return ListTile(
+                      leading: Icon(Icons.question_answer),
                       trailing: IconButton(
                         onPressed: () async {
                           final doIt = await Dialogs.trueFalse(

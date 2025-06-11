@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'state/quizz_state.dart';
 
 final quizzControllerProvider =
-    StateNotifierProvider<QuizzController, QuizzState>(
+    StateNotifierProvider.autoDispose<QuizzController, QuizzState>(
       (ref) => QuizzController(QuizzState()),
     );
 

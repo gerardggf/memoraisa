@@ -26,6 +26,10 @@ class HomeController extends StateNotifier<HomeState> {
     state = state.copyWith(fetching: value);
   }
 
+  void updateFileFetching(bool value) {
+    state = state.copyWith(fileFetching: value);
+  }
+
   void updateFile(File value) {
     state = state.copyWith(file: value);
   }
@@ -36,7 +40,7 @@ class HomeController extends StateNotifier<HomeState> {
 
   AsyncResult<QuizzModel> submit() async {
     updateFetching(true);
-    final result = apiService.sendPrompt(
+    final result = await apiService.sendPrompt(
       file: state.file,
       questionType: state.questionType,
     );
