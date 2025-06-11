@@ -12,6 +12,7 @@ class HomeState with _$HomeState {
     @Default(false) bool fetching,
     @Default(false) bool fileFetching,
     @Default(QuestionTypeEnum.single) QuestionTypeEnum questionType,
+    @Default(10) int numberOfQuestions,
     @Default(null) File? file,
     @Default(AppLocale.en) AppLocale responseLocale,
   }) = _HomeState;

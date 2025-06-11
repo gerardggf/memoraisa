@@ -85,6 +85,9 @@ class _QuestionWidgetState extends ConsumerState<QuestionWidget> {
                                   : (_) {
                                       widget.onSelectAnswer(answer);
                                     },
+                              side: BorderSide(
+                                color: darkMode ? Colors.black : Colors.white,
+                              ),
                               activeColor: darkMode
                                   ? Colors.black
                                   : Colors.white,

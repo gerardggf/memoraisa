@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:memoraisa/app/core/constants/assets.dart';
 import 'package:memoraisa/app/core/constants/global.dart';
 import 'package:memoraisa/app/core/utils/extensions/theme_mode_extension.dart';
 import 'package:memoraisa/app/data/services/local_storage_service.dart';
@@ -25,6 +26,10 @@ class HomeView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
+        leading: Padding(
+          padding: const EdgeInsets.all(3).copyWith(left: 10),
+          child: ClipOval(child: Image.asset(Assets.iconLogo)),
+        ),
         title: const Text(Global.appName),
         actions: [
           IconButton(
