@@ -8,13 +8,14 @@ import 'package:memoraisa/app/domain/repositories/prefs_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'state/home_state.dart';
 
-final homeControllerProvider = StateNotifierProvider<HomeController, HomeState>(
-  (ref) => HomeController(
-    HomeState(),
-    ref.read(apiServiceProvider),
-    ref.read(prefsRepoProvider),
-  ),
-);
+final homeControllerProvider =
+    StateNotifierProvider.autoDispose<HomeController, HomeState>(
+      (ref) => HomeController(
+        HomeState(),
+        ref.read(apiServiceProvider),
+        ref.read(prefsRepoProvider),
+      ),
+    );
 
 class HomeController extends StateNotifier<HomeState> {
   HomeController(super.state, this.apiService, this.prefsRepository);
@@ -38,12 +39,17 @@ class HomeController extends StateNotifier<HomeState> {
     state = state.copyWith(questionType: value);
   }
 
+  void updateNumberOfQuestions(int value) {
+    state = state.copyWith(numberOfQuestions: value);
+  }
+
   AsyncResult<QuizzModel> submit() async {
     updateFetching(true);
     final result = await apiService.sendPrompt(
       fileBytes: state.file,
       fileName: state.fileName,
       questionType: state.questionType,
+      numberOfQuestions: state.numberOfQuestions,
     );
     updateFetching(false);
     return result;

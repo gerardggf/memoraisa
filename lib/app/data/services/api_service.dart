@@ -1,7 +1,6 @@
-// ADAPTADO PARA WEB Y MÓVIL
 import 'dart:convert' show utf8, json;
 import 'dart:typed_data';
-import 'package:archive/archive_io.dart' show ZipDecoder;
+import 'package:archive/archive_io.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:memoraisa/app/core/constants/urls.dart';
 import 'package:memoraisa/app/core/question_type_enum.dart';
@@ -10,12 +9,13 @@ import 'package:memoraisa/app/core/utils/typedefs.dart';
 import 'package:memoraisa/app/data/services/local_storage_service.dart';
 import 'package:memoraisa/app/domain/models/quizz_model.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart' show kDebugMode, compute;
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
-import 'package:xml/xml.dart' show XmlDocument, XmlFindExtension;
+import 'package:xml/xml.dart';
 import '../../core/providers.dart';
 import '../../core/utils/either/either.dart';
+import '../../core/utils/ocr/ocr.dart';
 
 final apiServiceProvider = Provider<ApiService>(
   (ref) =>
@@ -31,7 +31,10 @@ class ApiService {
   final String url = Urls.promptEndpoint;
   final String apiKey = dotenv.env['API_KEY'] ?? '';
 
-  static String extractTextFromBytes(Uint8List bytes, String filename) {
+  static Future<String> extractTextFromBytes(
+    Uint8List bytes,
+    String filename,
+  ) async {
     final lowerPath = filename.toLowerCase();
 
     if (lowerPath.endsWith('.txt') ||
@@ -42,7 +45,7 @@ class ApiService {
 
     if (lowerPath.endsWith('.pdf')) {
       final document = PdfDocument(inputBytes: bytes);
-      String content = PdfTextExtractor(document).extractText();
+      final content = PdfTextExtractor(document).extractText();
       document.dispose();
       return content;
     }
@@ -54,6 +57,17 @@ class ApiService {
       return xml.findAllElements('w:t').map((e) => e.value).join(' ');
     }
 
+    if (lowerPath.endsWith('.jpg') ||
+        lowerPath.endsWith('.jpeg') ||
+        lowerPath.endsWith('.png') ||
+        lowerPath.endsWith('.webp')) {
+      final text = await extractTextFromImageBytes(bytes);
+      if (text == null || text.trim().isEmpty) {
+        throw Exception('No se pudo extraer texto de la imagen');
+      }
+      return text;
+    }
+
     throw Exception('Formato de archivo no soportado');
   }
 
@@ -61,31 +75,65 @@ class ApiService {
     required Uint8List? fileBytes,
     required String? fileName,
     required QuestionTypeEnum questionType,
+    required int numberOfQuestions,
   }) async {
     if (fileBytes == null || fileName == null) {
       return Either.left(Failure('No file selected'));
     }
 
-    final fileContent = await compute(_computeExtractText, [
-      fileBytes,
-      fileName,
-    ]);
+    final fileContent = await extractTextFromBytes(fileBytes, fileName);
 
-    final systemPrompt =
-        '''Responde siempre en español y únicamente con un JSON con el siguiente formato para cada pregunta, basado en la información que te será proporcionada:
+    final jsonSample = () {
+      switch (questionType) {
+        case QuestionTypeEnum.single:
+          return '''
 {
   "quizzName": "(nombre del archivo)",
+  "questionType: "single",
   "questions": [
     {
       "term": "(pregunta 1)",
-      "answers": ["(respuesta 1)", "(respuesta 2)", "(respuesta 3)"],
+      "answers": ["(respuesta 1)", "(respuesta 2)", "(respuesta 3)",, "(respuesta 4)"],
       "correctAnswer": "(respuesta correcta identica a la listada en answers)"
     }
   ]
-}''';
+}
+''';
+        case QuestionTypeEnum.multiple:
+          return '''
+{
+  "quizzName": "(nombre del archivo)",
+  "questionType: "multiple",
+  "questions": [
+    {
+      "term": "(pregunta 1)",
+      "answers": ["(respuesta 1)", "(respuesta 2)", "(respuesta 3)",, "(respuesta 4)"],
+      "correctAnswers": ["(respuesta correcta 1 idéntica a la listada en answers)","(respuesta correcta 2 idéntica a la listada en answers)",...]
+    }
+  ]
+}
+''';
+        case QuestionTypeEnum.trueFalse:
+          return '''
+{
+  "quizzName": "(nombre del archivo)",
+  "questionType: "trueFalse",
+  "questions": [
+    {
+      "term": "(pregunta 1)",
+      "answer": (verdadero o falso)
+    }
+  ]
+}
+''';
+      }
+    }();
+
+    final systemPrompt =
+        'Responde siempre en español y únicamente con un JSON con el siguiente formato para cada pregunta, basado en la información que te será proporcionada: "$jsonSample"';
 
     final userPrompt =
-        'Dame 10 preguntas sacadas del siguiente contenido: "$fileContent". Haz que las respuestas no estén ordenadas.';
+        'Dame $numberOfQuestions preguntas sacadas del siguiente contenido: "$fileContent". Haz que las respuestas no estén ordenadas.';
 
     try {
       final response = await dio.post(
@@ -98,9 +146,9 @@ class ApiService {
         ),
         data: {
           'model': 'llama-3.3-70b-versatile',
-          "messages": [
-            {"role": "system", "content": systemPrompt},
-            {"role": "user", "content": userPrompt},
+          'messages': [
+            {'role': 'system', 'content': systemPrompt},
+            {'role': 'user', 'content': userPrompt},
           ],
         },
       );
@@ -116,18 +164,12 @@ class ApiService {
         await localStorageService.saveQuiz(result);
         return Either.right(result);
       } else {
-        return Either.left(Failure('Status code: \${response.statusCode}'));
+        return Either.left(Failure('Status code: ${response.statusCode}'));
       }
     } catch (e) {
       if (kDebugMode) print(e);
       return Either.left(Failure(e.toString()));
     }
-  }
-
-  static String _computeExtractText(List<dynamic> args) {
-    final bytes = args[0] as Uint8List;
-    final filename = args[1] as String;
-    return extractTextFromBytes(bytes, filename);
   }
 
   String _extractJsonBlock(String text) {

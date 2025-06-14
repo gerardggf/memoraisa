@@ -6,7 +6,8 @@
             "answers": [
                 "(respuesta 1)",
                 "(respuesta 2)",
-                "(respuesta 3)"
+                "(respuesta 3)",
+                "(respuesta 4)"
             ],
             "correctAnswer": "(respuesta correcta identica a la listada en answers)"
         },
@@ -15,7 +16,8 @@
             "answers": [
                 "(respuesta 1)",
                 "(respuesta 2)",
-                "(respuesta 3)"
+                "(respuesta 3)",
+                "(respuesta 4)"
             ],
             "correctAnswer": "(respuesta correcta identica a la listada en answers)"
         }

@@ -4,15 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../domain/repositories/prefs_repository.dart';
 
 final themeControllerProvider = ChangeNotifierProvider<ThemeController>(
-  (ref) => ThemeController(
-    preferencesRepository: ref.watch(prefsRepoProvider),
-  ),
+  (ref) => ThemeController(preferencesRepository: ref.watch(prefsRepoProvider)),
 );
 
 class ThemeController extends ChangeNotifier {
-  ThemeController({
-    required this.preferencesRepository,
-  }) {
+  ThemeController({required this.preferencesRepository}) {
     _darkMode = preferencesRepository.isDarkMode;
   }
 

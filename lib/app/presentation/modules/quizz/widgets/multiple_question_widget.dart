@@ -7,37 +7,51 @@ import 'package:memoraisa/app/presentation/modules/quizz/quizz_controller.dart';
 
 import '../../../../core/constants/colors.dart';
 
-class QuestionWidget extends ConsumerStatefulWidget {
-  const QuestionWidget({
+class MultipleQuestionWidget extends ConsumerStatefulWidget {
+  const MultipleQuestionWidget({
     super.key,
     required this.question,
     required this.onSelectAnswer,
-    required this.selectedAnswer,
+    required this.selectedAnswers,
     required this.index,
   });
 
-  final QuestionModel question;
-  final void Function(String?) onSelectAnswer;
-  final String? selectedAnswer;
+  final MultipleQuestionModel question;
+  final void Function(List<String>?) onSelectAnswer;
+  final List<String>? selectedAnswers;
   final int index;
 
   @override
-  ConsumerState<QuestionWidget> createState() => _QuestionWidgetState();
+  ConsumerState<MultipleQuestionWidget> createState() => _QuestionWidgetState();
 }
 
-class _QuestionWidgetState extends ConsumerState<QuestionWidget> {
+class _QuestionWidgetState extends ConsumerState<MultipleQuestionWidget> {
+  List<String>? selectedAnswers;
+
+  @override
+  void initState() {
+    super.initState();
+    selectedAnswers = widget.selectedAnswers;
+  }
+
   @override
   Widget build(BuildContext context) {
     final darkMode = context.isDarkMode;
     final state = ref.watch(quizzControllerProvider);
+    final areEqual =
+        (widget.question.correctAnswers.toSet().containsAll(
+          widget.selectedAnswers ?? [],
+        )) &&
+        (widget.selectedAnswers?.toSet().containsAll(
+              widget.question.correctAnswers,
+            ) ??
+            false);
     return AbsorbPointer(
       absorbing: state.showAnswers,
       child: Container(
         margin: EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: widget.selectedAnswer != widget.question.correctAnswer
-              ? Colors.red
-              : Colors.grey,
+          color: areEqual ? Colors.red : Colors.grey,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
@@ -64,7 +78,16 @@ class _QuestionWidgetState extends ConsumerState<QuestionWidget> {
                   for (var answer in widget.question.answers)
                     InkWell(
                       onTap: () {
-                        widget.onSelectAnswer(answer);
+                        if (selectedAnswers == null) {
+                          selectedAnswers = [answer];
+                        } else if (selectedAnswers!.contains(answer)) {
+                          selectedAnswers!.remove(answer);
+                        } else {
+                          selectedAnswers!.add(answer);
+                        }
+                        setState(() {});
+
+                        widget.onSelectAnswer(selectedAnswers);
                       },
                       borderRadius: BorderRadius.circular(20),
                       child: Container(
@@ -79,11 +102,22 @@ class _QuestionWidgetState extends ConsumerState<QuestionWidget> {
                         child: Row(
                           children: [
                             Checkbox(
-                              value: answer == widget.selectedAnswer,
+                              value: areEqual,
                               onChanged: state.showAnswers
                                   ? null
                                   : (_) {
-                                      widget.onSelectAnswer(answer);
+                                      if (selectedAnswers == null) {
+                                        selectedAnswers = [answer];
+                                      } else if (selectedAnswers!.contains(
+                                        answer,
+                                      )) {
+                                        selectedAnswers!.remove(answer);
+                                      } else {
+                                        selectedAnswers!.add(answer);
+                                      }
+                                      setState(() {});
+
+                                      widget.onSelectAnswer(selectedAnswers);
                                     },
                               side: BorderSide(
                                 color: darkMode ? Colors.black : Colors.white,
@@ -117,7 +151,13 @@ class _QuestionWidgetState extends ConsumerState<QuestionWidget> {
                   vertical: 10,
                 ),
                 child: Text(
-                  '${mapIndex(widget.question.answers.indexOf(widget.question.correctAnswer))} ${widget.question.correctAnswer}',
+                  selectedAnswers
+                          ?.map(
+                            (answer) =>
+                                '${mapIndex(widget.question.answers.indexOf(answer))} $answer',
+                          )
+                          .join(', ') ??
+                      '',
                   style: TextStyle(color: Colors.white),
                 ),
               ),

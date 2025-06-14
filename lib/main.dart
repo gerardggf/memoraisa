@@ -16,7 +16,9 @@ void main() async {
   ///hive
   await Hive.initFlutter();
   Hive.registerAdapter(QuizzModelAdapter());
-  Hive.registerAdapter(QuestionModelAdapter());
+  Hive.registerAdapter(SingleQuestionModelAdapter());
+  Hive.registerAdapter(MultipleQuestionModelAdapter());
+  Hive.registerAdapter(TrueOrFalseQuestionModelAdapter());
   await Hive.openBox<QuizzModel>('quizzes');
 
   runApp(

@@ -15,4 +15,8 @@ class Global {
   ];
 
   static const int maxCharacters = 20000;
+
+  static const List<int> numberOfQuestionsList = [5, 10, 20, 30];
+
+  static const int defaultNumberOfQuestions = 10;
 }

@@ -7,6 +7,8 @@ class QuizzState with _$QuizzState {
   factory QuizzState({
     @Default(false) bool fetching,
     @Default(false) bool showAnswers,
-    @Default({}) Map<int, String?> selectedAnswers,
+    @Default({}) Map<int, String?> singleSelectedAnswers,
+    @Default({}) Map<int, List<String>?> multipleSelectedAnswers,
+    @Default({}) Map<int, bool?> trueFalseSelectedAnswers,
   }) = _QuizzState;
 }

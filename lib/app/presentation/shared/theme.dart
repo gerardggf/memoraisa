@@ -136,7 +136,7 @@ class AppTheme {
       menuStyle: MenuStyle(
         backgroundColor: const WidgetStatePropertyAll(AppColors.lightBg),
         shape: WidgetStatePropertyAll(
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         ),
         elevation: const WidgetStatePropertyAll(0),
       ),
@@ -347,7 +347,7 @@ class AppTheme {
       menuStyle: MenuStyle(
         backgroundColor: const WidgetStatePropertyAll(AppColors.darkBg),
         shape: WidgetStatePropertyAll(
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         ),
         elevation: const WidgetStatePropertyAll(0),
       ),

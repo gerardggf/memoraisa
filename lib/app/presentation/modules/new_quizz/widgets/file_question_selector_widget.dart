@@ -1,10 +1,13 @@
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:memoraisa/app/core/constants/colors.dart';
 import 'package:memoraisa/app/core/constants/global.dart';
 import 'package:memoraisa/app/core/question_type_enum.dart';
+import 'package:memoraisa/app/core/utils/extensions/num_to_sizedbox.dart';
 import 'package:memoraisa/app/core/utils/extensions/theme_mode_extension.dart';
 import 'package:memoraisa/app/presentation/modules/home/home_controller.dart';
 import 'package:memoraisa/app/presentation/modules/home/home_view.dart';
@@ -24,18 +27,59 @@ class _FileAndQuestionTypeSelectorState
     final notifier = ref.read(homeControllerProvider.notifier);
     try {
       notifier.updateFileFetching(true);
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: Global.allowedFileExtensions,
+
+      final ImagePicker picker = ImagePicker();
+
+      // Mostrar opciones
+      final source = await showModalBottomSheet<ImageSource>(
+        context: context,
+        builder: (context) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.upload_file),
+              title: const Text('Seleccionar archivo'),
+              onTap: () => Navigator.pop(context, null),
+            ),
+            if (!kIsWeb) ...[
+              ListTile(
+                leading: const Icon(Icons.photo),
+                title: const Text('Seleccionar imagen desde galería'),
+                onTap: () => Navigator.pop(context, ImageSource.gallery),
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Hacer foto'),
+                onTap: () => Navigator.pop(context, ImageSource.camera),
+              ),
+            ],
+          ],
+        ),
       );
-      if (result != null && result.files.single.path != null) {
-        notifier.updateFile(
-          result.files.single.bytes!,
-          result.files.single.name,
+
+      if (source == null) {
+        final result = await FilePicker.platform.pickFiles(
+          type: FileType.custom,
+          allowedExtensions: Global.allowedFileExtensions,
+          withData: true,
         );
+        if (result != null && result.files.single.bytes != null) {
+          notifier.updateFile(
+            result.files.single.bytes!,
+            result.files.single.name,
+          );
+        }
+      } else {
+        final XFile? image = await picker.pickImage(
+          source: source,
+          imageQuality: 80,
+        );
+        if (image != null) {
+          final bytes = await image.readAsBytes();
+          notifier.updateFile(bytes, image.name);
+        }
       }
-      notifier.updateFileFetching(false);
-    } catch (_) {
+    } finally {
       notifier.updateFileFetching(false);
     }
   }
@@ -60,7 +104,7 @@ class _FileAndQuestionTypeSelectorState
                 'Selecciona un archivo',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 10),
+              10.h,
               OutlinedButton.icon(
                 onPressed: pickFile,
                 icon: state.fileFetching
@@ -86,12 +130,12 @@ class _FileAndQuestionTypeSelectorState
                       : 'Seleccionar archivo',
                 ),
               ),
-              const SizedBox(height: 20),
+              20.h,
               const Text(
                 '¿Qué tipo de preguntas quieres?',
                 style: TextStyle(fontSize: 16),
               ),
-              const SizedBox(height: 10),
+              10.h,
               Wrap(
                 spacing: 8,
                 children: QuestionTypeEnum.values.map((type) {
@@ -105,7 +149,34 @@ class _FileAndQuestionTypeSelectorState
                   );
                 }).toList(),
               ),
-              const SizedBox(height: 30),
+
+              20.h,
+              const Text(
+                '¿Cuántas preguntas quieres?',
+                style: TextStyle(fontSize: 16),
+              ),
+              10.h,
+              DropdownButton(
+                borderRadius: BorderRadius.circular(20),
+                underline: const SizedBox(),
+                items: Global.numberOfQuestionsList
+                    .map(
+                      (e) =>
+                          DropdownMenuItem(value: e, child: Text(e.toString())),
+                    )
+                    .toList(),
+                style: TextStyle(
+                  color: context.isDarkMode ? Colors.white : Colors.black,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+                value: state.numberOfQuestions,
+                onChanged: (value) {
+                  if (value == null) return;
+                  notifier.updateNumberOfQuestions(value);
+                },
+              ),
+              30.h,
               Center(
                 child: ElevatedButton.icon(
                   onPressed: confirmSelection,

@@ -17,7 +17,23 @@ class QuizzController extends StateNotifier<QuizzState> {
     state = state.copyWith(showAnswers: value);
   }
 
-  void updateSelectedAnswers(Map<int, String?> value) {
-    state = state.copyWith(selectedAnswers: value);
+  void updateSingleSelectedAnswers(Map<int, String?> value) {
+    state = state.copyWith(singleSelectedAnswers: value);
+  }
+
+  void updateMultipleSelectedAnswers(Map<int, List<String>?> value) {
+    state = state.copyWith(multipleSelectedAnswers: value);
+  }
+
+  void updateTruefalseSelectedAnswers(Map<int, bool?> value) {
+    state = state.copyWith(trueFalseSelectedAnswers: value);
+  }
+
+  void clearAllAnswers() {
+    state = state.copyWith(
+      singleSelectedAnswers: {},
+      multipleSelectedAnswers: {},
+      trueFalseSelectedAnswers: {},
+    );
   }
 }
