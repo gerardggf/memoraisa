@@ -52,11 +52,12 @@ class _HomeViewState extends ConsumerState<HomeView> {
           ),
         ],
       ),
-      floatingActionButton: ElevatedButton(
+      floatingActionButton: ElevatedButton.icon(
+        icon: Icon(Icons.add, size: 24),
         onPressed: () {
           context.pushNamed(NewQuizzView.routeName);
         },
-        child: const Text('New quizz'),
+        label: const Text('New quizz'),
       ),
       body: Stack(
         children: [

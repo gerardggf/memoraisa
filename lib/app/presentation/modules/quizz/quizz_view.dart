@@ -22,6 +22,7 @@ class _QuizzViewState extends ConsumerState<QuizzView> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(quizzControllerProvider);
+    print(widget.quizz.toJson());
     final notifier = ref.read(quizzControllerProvider.notifier);
     final answeredQuestions = () {
       int correct = 0;
@@ -102,17 +103,12 @@ class _QuizzViewState extends ConsumerState<QuizzView> {
                     return MultipleQuestionWidget(
                       index: index + 1,
                       question: question,
-                      onSelectAnswer: (answer) {
-                        if (answer == state.multipleSelectedAnswers[index]) {
-                          notifier.updateMultipleSelectedAnswers(
-                            Map.from(state.multipleSelectedAnswers)
-                              ..[index] = null,
-                          );
-                          return;
-                        }
+                      onSelectAnswer: (answers) {
+                        if (answers == null) return;
+
                         notifier.updateMultipleSelectedAnswers(
                           Map.from(state.multipleSelectedAnswers)
-                            ..[index] = answer,
+                            ..[index] = answers,
                         );
                       },
                       selectedAnswers: state.multipleSelectedAnswers[index],
@@ -122,13 +118,7 @@ class _QuizzViewState extends ConsumerState<QuizzView> {
                       index: index + 1,
                       question: question,
                       onSelectAnswer: (answer) {
-                        if (answer == state.trueFalseSelectedAnswers[index]) {
-                          notifier.updateTruefalseSelectedAnswers(
-                            Map.from(state.trueFalseSelectedAnswers)
-                              ..[index] = null,
-                          );
-                          return;
-                        }
+                        if (answer == null) return;
                         notifier.updateTruefalseSelectedAnswers(
                           Map.from(state.trueFalseSelectedAnswers)
                             ..[index] = answer,

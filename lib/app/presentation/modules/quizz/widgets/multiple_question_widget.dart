@@ -39,19 +39,14 @@ class _QuestionWidgetState extends ConsumerState<MultipleQuestionWidget> {
     final darkMode = context.isDarkMode;
     final state = ref.watch(quizzControllerProvider);
     final areEqual =
-        (widget.question.correctAnswers.toSet().containsAll(
-          widget.selectedAnswers ?? [],
-        )) &&
-        (widget.selectedAnswers?.toSet().containsAll(
-              widget.question.correctAnswers,
-            ) ??
-            false);
+        widget.question.correctAnswers.toSet().toString() ==
+        widget.selectedAnswers?.toSet().toString();
     return AbsorbPointer(
       absorbing: state.showAnswers,
       child: Container(
         margin: EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: areEqual ? Colors.red : Colors.grey,
+          color: areEqual ? Colors.green : Colors.red,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
@@ -102,7 +97,7 @@ class _QuestionWidgetState extends ConsumerState<MultipleQuestionWidget> {
                         child: Row(
                           children: [
                             Checkbox(
-                              value: areEqual,
+                              value: (selectedAnswers ?? []).contains(answer),
                               onChanged: state.showAnswers
                                   ? null
                                   : (_) {

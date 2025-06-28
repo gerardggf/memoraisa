@@ -82,6 +82,9 @@ class ApiService {
     }
 
     final fileContent = await extractTextFromBytes(fileBytes, fileName);
+    if (fileContent.isEmpty) {
+      return Either.left(Failure('No data extracted from the file'));
+    }
 
     final jsonSample = () {
       switch (questionType) {
@@ -108,24 +111,24 @@ class ApiService {
     {
       "term": "(pregunta 1)",
       "answers": ["(respuesta 1)", "(respuesta 2)", "(respuesta 3)",, "(respuesta 4)"],
-      "correctAnswers": ["(respuesta correcta 1 idéntica a la listada en answers)","(respuesta correcta 2 idéntica a la listada en answers)",...]
+      "correctAnswers": (devuelve siempre un array con 2 o 3 respuestas correctas idénticas a las listadas en el campo answers de entre todas las respuestas disponibles)
     }
   ]
 }
 ''';
-        case QuestionTypeEnum.trueFalse:
-          return '''
-{
-  "quizzName": "(nombre del archivo)",
-  "questionType: "trueFalse",
-  "questions": [
-    {
-      "term": "(pregunta 1)",
-      "answer": (verdadero o falso)
-    }
-  ]
-}
-''';
+        //         case QuestionTypeEnum.trueFalse:
+        //           return '''
+        // {
+        //   "quizzName": "(nombre del archivo)",
+        //   "questionType: "trueFalse",
+        //   "questions": [
+        //     {
+        //       "term": "(pregunta 1)",
+        //       "answer": (si la respuesta es correcta "true" o sino "false")
+        //     }
+        //   ]
+        // }
+        // ''';
       }
     }();
 

@@ -37,7 +37,7 @@ class _QuestionWidgetState extends ConsumerState<SingleQuestionWidget> {
         decoration: BoxDecoration(
           color: widget.selectedAnswer != widget.question.correctAnswer
               ? Colors.red
-              : Colors.grey,
+              : Colors.green,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
@@ -79,6 +79,9 @@ class _QuestionWidgetState extends ConsumerState<SingleQuestionWidget> {
                         child: Row(
                           children: [
                             Checkbox(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(50),
+                              ),
                               value: answer == widget.selectedAnswer,
                               onChanged: state.showAnswers
                                   ? null

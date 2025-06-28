@@ -125,6 +125,7 @@ class TrueOrFalseQuestionModel {
   TrueOrFalseQuestionModel({required this.term, required this.answer});
 
   factory TrueOrFalseQuestionModel.fromJson(Map<String, dynamic> json) {
+    print(json);
     return TrueOrFalseQuestionModel(term: json['term'], answer: json['answer']);
   }
 

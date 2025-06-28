@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:memoraisa/app/core/utils/extensions/num_to_sizedbox.dart';
+import 'package:memoraisa/app/core/utils/extensions/string_extensions.dart';
 import 'package:memoraisa/app/data/services/local_storage_service.dart';
 import 'package:memoraisa/app/domain/models/quizz_model.dart';
 import 'package:memoraisa/app/presentation/modules/home/home_view.dart';
@@ -49,9 +50,9 @@ class QuizzTileItemWidget extends ConsumerWidget {
                       fontSize: 16,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  4.h,
                   Text(
-                    '${quizz.questions.length} preguntas',
+                    '${quizz.questions.length} preguntas (${quizz.questionType.capitalize()})',
                     style: TextStyle(
                       color: Theme.of(context).textTheme.bodySmall?.color,
                     ),
